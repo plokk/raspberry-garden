@@ -136,7 +136,8 @@ var Sensor = {
 	 */
 	reset: function(callback) {
 		var sequence = [
-			DataHigh, Wait
+			DataHigh, 
+			Wait
 		];
 		for (var ii = 0; ii < 9; ii++) {
 			sequence.push(
@@ -157,17 +158,20 @@ var Sensor = {
 	 * Calls the transmission start sequence.
 	 */
 	_transmissionStart: function(callback) {
-		async.series([
-		SCKHigh,  Wait,
-		DataLow,  Wait,
-		SCKLow,   Wait,
-		SCKHigh,  Wait,
-		DataHigh, Wait,
-		SCKLow,   Wait
-		], function(error) {
-		CRCValue = 0;
-		callback(error);
-		});
+		async.series(
+			[
+				SCKHigh,  Wait,
+				DataLow,  Wait,
+				SCKLow,   Wait,
+				SCKHigh,  Wait,
+				DataHigh, Wait,
+				SCKLow,   Wait
+			], 
+			function(error) {
+				CRCValue = 0;
+				callback(error);
+			}
+		);
 	},
 
 	/**
@@ -176,38 +180,40 @@ var Sensor = {
 	_sendByte: function(value, callback) {
 		var sequence = [];
 		for (var mask = 0x80; mask; mask >>= 1) {
-		sequence.push(
-		SCKLow, Wait,
-		(value & mask) ? DataHigh : DataLow, Wait,
-		SCKHigh, Wait
-		);
+			sequence.push(
+				SCKLow, Wait,
+				(value & mask) ? DataHigh : DataLow, Wait,
+				SCKHigh, Wait
+			);
 		}
 		sequence.push(
-		SCKLow, Wait,
+			SCKLow, Wait,
 
-		// Release DATA line
-		DataHigh, Wait,
-		SCKHigh, Wait
+			// Release DATA line
+			DataHigh, Wait,
+			SCKHigh, Wait
 		);
 
 		async.series(sequence, function(error) {
-		if (error) {
-		callback(error);
-		return;
-		}
-		DataRead(function(error, dataValue) {
-		if (error) {
-		callback(error);
-		return;
-		}
-		if (dataValue) {
-		callback("Send byte not acked");
-		return;
-		};
-		Sensor._mutateCRC(value);
-
-		async.series([SCKLow, Wait], callback);
-		});
+			if (error) {
+				callback(error);
+				return;
+			}
+			
+			DataRead(function(error, dataValue) {
+				if (error) {
+					callback(error);
+					return;
+				}
+				
+				if (dataValue) {
+					callback("Send byte not acked");
+					return;
+				};
+			
+				Sensor._mutateCRC(value);
+				async.series([SCKLow, Wait], callback);
+			});
 		});
 	},
 

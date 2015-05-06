@@ -42,12 +42,19 @@ function writeConfig(callback) {
 	}); 
 }
 
+var readQueue = [];
+
 /**
  * Read sensor values
- *
- * @param {string} Unique sensor name
  */
-function readSensor(sensorName) {
+function readSensors() {
+
+	var sensorName = readQueue.shift();
+	
+	if (!sensorName) {
+		return;
+	}
+
 	Sensor.select(sensorName);
 	async.series(
 		[
@@ -76,6 +83,7 @@ function readSensor(sensorName) {
 			if (error) {
 				console.error(TITLE.ERROR + error);
 			}
+			readSensors();
 		}
 	);
 }
@@ -95,9 +103,11 @@ function loop() {
 
 			if (moment().diff(previousReading, 'seconds') >= readingInterval) {
 				console.log(TITLE.INFO + sensor + ' requires reading');
-				readSensor(sensor);
+				readQueue.push(sensor);
 			}
-		}		
+		}
+
+		readSensors();		
 
 	}, 5000);
 }

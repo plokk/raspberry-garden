@@ -1,95 +1,152 @@
-var async = require('async');
-var Sensor = require('./sensor.js');
-var fs = require('fs');
+var _      = require('underscore');
+var async  = require('async');
+var colors = require('colors');
+var fs     = require('fs');
 var moment = require('moment');
 
-var file = __dirname + '/config.json';
+var Sensor = require('./sensor.js');
+
+// Console log message titles
+var TITLE = {
+	INFO:  ' - '.green,
+	ERROR: ' ! '.red 
+}
+
+var configFile   = __dirname + '/config.json';
 var config = {};
 
+/**
+ * Read config file and save it to config object
+ */
 function readConfig(callback) {
-	fs.readFile(file, 'utf8', function(error, data) {
+	fs.readFile(configFile, 'utf8', function(error, data) {
 		if (error) {
-			console.log(error);
+			callback(error);
 			return;
 		}
-		console.log("Config loaded");
-		config = JSON.parse(data);
+ 		config = JSON.parse(data) || {};
 		callback();
 	});
 }
 
+/**
+ * Write config object to a file
+ */
 function writeConfig(callback) {
-	fs.writeFile(file, JSON.stringify(config, null, 2), function(error) {
+	fs.writeFile(configFile, JSON.stringify(config, null, 2), function(error) {
 		if (error) {
-			console.log(error);
+			callback(error);
 			return;
 		}
 		callback();
 	}); 
 }
 
-function readSensors(callback) {
-	async.series([
-		Sensor.init,
-		Sensor.reset,
-		Sensor.longWait,
-		function(callback) {
-			Sensor.getSensorValues(function(error, values) {
-				console.log(Sensor.getSelected().name + ':');
-				console.log(values);
-				callback(error);
-			});
-		},
-		function(callback) {
-			config.previousReading = moment();
-			callback();
-		},
-		writeConfig
-	], function(error) {
-		Sensor.shutdown();
-		if (error) {
-			console.error(error);
-		}
-		callback();
-	});
-}
-
-function runLoop() {
-	async.series([
-	readConfig,
-	function(callback) {
-		console.log('Config:');
-		console.log(config);
-		if (config.previousReading) {
-			var previousReading = moment(config.previousReading);	
-			// Time for a new reading
-			var message = false;
-			while (moment().diff(previousReading, 'seconds') < 20) {
-				if (message === false) {
-					console.log('Last reading less than 20 sec ago. Waiting..');
-					message = true;
-				}
+/**
+ * Read sensor values
+ *
+ * @param {string} Unique sensor name
+ */
+function readSensor(sensorName) {
+	Sensor.select(sensorName);
+	async.series(
+		[
+			Sensor.init,
+			Sensor.reset,
+			Sensor.longWait,
+			function(callback) {
+				Sensor.getSensorValues(function(error, values) {
+					if (error) {
+						callback(error);
+						return;
+					}
+					console.log(TITLE.INFO + Sensor.getSelected().name + ':');
+					console.log(values);
+					callback();
+				});
+			},
+			function(callback) {
+				config.sensors[sensorName].previousReading = moment();
+				callback();
+			},
+			writeConfig
+		], 
+		function(error) {
+			Sensor.shutdown();
+			if (error) {
+				console.error(TITLE.ERROR + error);
 			}
 		}
-		
-		console.log('Time for a new reading');
-		// Time for a new reading
-		readSensors(callback);
-		
-	},
-	], function(error) {
-		if (error) {
-			console.error(error);
-		}
-		runLoop();
-	});
+	);
 }
 
-Sensor.add('soil-temperature-and-humidity', 18, 16);
-Sensor.select('soil-temperature-and-humidity');
+/**
+ * Application loop
+ */
+function loop() {
+	setInterval(function () {
+		
+		var sensors = config.sensors || {};
+				
+		for (var sensor in sensors) {
 
-runLoop();
+			var readingInterval = sensors[sensor].readingInterval;
+			var previousReading = moment(sensors[sensor].previousReading);
 
+			if (moment().diff(previousReading, 'seconds') >= readingInterval) {
+				console.log(TITLE.INFO + sensor + ' requires reading');
+				readSensor(sensor);
+			}
+		}		
+
+	}, 5000);
+}
+
+/**
+ * Load config file and initialize application
+ */
+function initialize() {
+	async.series(
+		[
+			function(callback) {
+				console.log(TITLE.INFO + 'Reading config file..');
+				callback();
+			},
+			readConfig,
+			function(callback) {
+				console.log(TITLE.INFO + 'Config loaded:');
+
+				var sensors = config.sensors || {};
+				
+				for (var sensor in sensors) {
+
+					// Show sensor config
+					console.log(TITLE.INFO + sensor);
+					console.log('  ' + TITLE.INFO + 'Type:             ' + sensors[sensor].type);
+					console.log('  ' + TITLE.INFO + 'Pin Data:         ' + sensors[sensor].pinData);
+					console.log('  ' + TITLE.INFO + 'Pin SCK:          ' + sensors[sensor].pinSck);
+					console.log('  ' + TITLE.INFO + 'Reading interval: ' + sensors[sensor].readingInterval + ' sec');
+					console.log('  ' + TITLE.INFO + 'Previous reading: ' + sensors[sensor].previousReading);
+
+					// Add sensor
+					Sensor.add(sensor, sensors[sensor].pinData, sensors[sensor].pinSck);
+				}
+
+				callback();
+			}
+		], 
+		function(error) {
+			if (error) {
+				console.error(TITLE.ERROR + error);
+				return;
+			}
+			console.log(TITLE.INFO + 'Initialization complete. Running application..');
+			loop();
+		}
+	);
+}
+
+initialize();
 
 
 

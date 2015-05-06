@@ -1,19 +1,19 @@
 {
   "author": "Antti Laakso, Antti Suniala",
-  "name": "raspberry_garden",
-  "description": "IoT smart gardening for Raspberry Pi",
+  "name": "raspberry-garden",
+  "description": "Raspberry Pi based smart garden monitoring project for Exactum Greenhouse",
   "version": "0.0.0",
   "repository": {
-    "url": ""
+    "url": "https://github.com/plokk/raspberry-garden.git"
   },
   "dependencies": {
     "async": "^0.9.0",
+    "moment": "^2.10.2",
     "pi-gpio": "0.0.7",
-    "pi-sht1x": "0.0.1"
+    "rpi-gpio": "^0.5.1",
+    "sleep": "^2.0.0"
   },
-  "devDependencies": {
-    "pi-gpio": "0.0.7"
-  },
+  "devDependencies": {},
   "optionalDependencies": {},
   "engines": {
     "node": "*"

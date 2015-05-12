@@ -3,7 +3,7 @@
 var Firebase = require('firebase');
 
 var FirebaseService = {
-    data: new Firebase('https://shining-heat-364.firebaseio.com/greenhouse/'),
+    data: new Firebase('https://greenhouse-data.firebaseio.com/'),
 
     addItem: function(device, item) {
         this.data.child(device).push(JSON.stringify(item));

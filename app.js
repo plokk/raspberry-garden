@@ -3,6 +3,7 @@ var async  = require('async');
 var colors = require('colors');
 var fs     = require('fs');
 var moment = require('moment');
+var firebase = require('./firebase_service.js');
 
 var Sensor = require('./sensor.js');
 
@@ -67,6 +68,7 @@ function readSensors() {
 						callback(error);
 						return;
 					}
+					firebase.addItem(sensorName, values);
 					console.log(TITLE.INFO + Sensor.getSelected().name + ':');
 					console.log(values);
 					callback();

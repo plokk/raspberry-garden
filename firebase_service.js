@@ -6,7 +6,7 @@ var FirebaseService = {
     data: new Firebase('https://shining-heat-364.firebaseio.com/greenhouse/'),
 
     addItem: function(device, item) {
-        this.data.child(device).push(item);
+        this.data.child(device).push(JSON.stringify(item));
     },
 
     getAllDeviceData: function(device, callback) {

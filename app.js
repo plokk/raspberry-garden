@@ -68,6 +68,17 @@ function readSensors() {
 						callback(error);
 						return;
 					}
+
+					//Add timestamp to values
+					values.timestamp = moment().format();
+
+					// Correct humidity in 100% if more than 99%
+					if ('humidity' in values) {
+						if (values.humidity > 99) {
+							values.humidity = 100;
+						}
+					} 
+
 					firebase.addItem(sensorName, values);
 					console.log(TITLE.INFO + Sensor.getSelected().name + ':');
 					console.log(values);
@@ -75,7 +86,7 @@ function readSensors() {
 				});
 			},
 			function(callback) {
-				config.sensors[sensorName].previousReading = moment();
+				config.sensors[sensorName].previousReading = moment().format();
 				callback();
 			},
 			writeConfig

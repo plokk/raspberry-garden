@@ -22,3 +22,13 @@ An experimental research laboratory located on rooftop of the Exactum building i
 
 - https://wiki.helsinki.fi/display/Exactum5D/Home
 - https://twitter.com/ExactGreenhouse
+
+## Installation
+
+- Nodejs installed globally
+- Forever installed globally
+
+Install app
+
+run npm install
+run ./install.sh

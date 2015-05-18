@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /**
  * Node.js Raspberry Pi Communication Library for multiple Sensor sensors

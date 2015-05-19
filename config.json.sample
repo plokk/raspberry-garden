@@ -4,15 +4,22 @@
       "type": "SHT1x",
       "pinData": 18,
       "pinSck": 16,
-      "readingInterval": 20,
-      "previousReading": "2015-05-19T12:04:44+00:00"
+      "readingInterval": 60,
+      "previousReading": "2015-05-19T12:16:36+00:00"
     },
     "air-temperature-and-humidity": {
       "type": "SHT1x",
       "pinData": 15,
       "pinSck": 13,
-      "readingInterval": 20,
-      "previousReading": "2015-05-19T12:04:49+00:00"
+      "readingInterval": 60,
+      "previousReading": "2015-05-19T12:16:42+00:00"
+    }
+  },
+  "controllers": {
+    "water-solenoid-valve": {
+      "type": "GPIO",
+      "pinData": 11,
+      "previousAction": "2015-05-19T12:16:42+00:00"
     }
   }
 }

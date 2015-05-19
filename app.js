@@ -1,11 +1,11 @@
-var _      = require('underscore');
-var async  = require('async');
-var colors = require('colors');
-var fs     = require('fs');
-var moment = require('moment');
-var firebase = require('./firebase_service.js');
-
-var Sensor = require('./sensor.js');
+var _          = require('underscore');
+var async      = require('async');
+var colors     = require('colors');
+var fs         = require('fs');
+var moment     = require('moment');
+var firebase   = require('./js/firebase_service.js');
+var Controller = require('./js/controller.js');
+var Sensor     = require('./js/sensor.js');
 
 // Console log message titles
 var TITLE = {
@@ -13,7 +13,10 @@ var TITLE = {
 	ERROR: ' ! '.red 
 }
 
-var configFile   = __dirname + '/config.json';
+// File name where configuration is stored
+var configFile  = __dirname + '/config.json';
+
+// Config object
 var config = {};
 
 /**
@@ -43,6 +46,7 @@ function writeConfig(callback) {
 	}); 
 }
 
+// Queue for sensor reading tasks
 var readQueue = [];
 
 /**
@@ -50,12 +54,15 @@ var readQueue = [];
  */
 function readSensors() {
 
+	// Get sensor from reading queue
 	var sensorName = readQueue.shift();
 	
+	// No sensor queued to be read
 	if (!sensorName) {
 		return;
 	}
 
+	// Select sensor to be used
 	Sensor.select(sensorName);
 	async.series(
 		[
@@ -125,6 +132,23 @@ function loop() {
 	}, 5000);
 }
 
+
+function doPourWater() {
+	// Select sensor to be used
+	Controller.select('water-solenoid-valve');
+	async.series(
+		[
+			Controller.write
+		], 
+		function(error) {
+			if (error) {
+				console.error(TITLE.ERROR + error);
+			}
+		}
+	);
+}
+
+
 /**
  * Load config file and initialize application
  */
@@ -139,8 +163,10 @@ function initialize() {
 			function(callback) {
 				console.log(TITLE.INFO + 'Config loaded:');
 
+				var controllers = config.controllers || {};
 				var sensors = config.sensors || {};
 				
+				console.log('\n' + TITLE.INFO + 'Sensors:');
 				for (var sensor in sensors) {
 
 					// Show sensor config
@@ -155,16 +181,31 @@ function initialize() {
 					Sensor.add(sensor, sensors[sensor].pinData, sensors[sensor].pinSck);
 				}
 
+				console.log('\n' + TITLE.INFO + 'Controllers:');
+				for (var controller in controllers) {
+
+					// Show controller config
+					console.log(TITLE.INFO + controller);
+					console.log('  ' + TITLE.INFO + 'Type:             ' + controllers[controller].type);
+					console.log('  ' + TITLE.INFO + 'Pin Data:         ' + controllers[controller].pinData);
+					console.log('  ' + TITLE.INFO + 'Previous action:  ' + controllers[controller].previousAction);
+
+					// Add sensor
+					Controller.add(controller, controllers[controller].pinData);
+				}
+
 				callback();
 			}
 		], 
 		function(error) {
 			if (error) {
 				console.error(TITLE.ERROR + error);
+				process.exit(1);
 				return;
 			}
 			console.log(TITLE.INFO + 'Initialization complete. Running application..');
 			loop();
+			//doPourWater();
 		}
 	);
 }

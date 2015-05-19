@@ -15,6 +15,7 @@
     "pi-gpio": "0.0.7",
     "rpi-gpio": "^0.5.1",
     "sleep": "^2.0.0",
+    "twitter-node-client": "0.0.6",
     "underscore": "^1.8.3"
   },
   "devDependencies": {},

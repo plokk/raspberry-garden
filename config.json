@@ -5,14 +5,14 @@
       "pinData": 18,
       "pinSck": 16,
       "readingInterval": 20,
-      "previousReading": "2015-05-19T12:03:02+00:00"
+      "previousReading": "2015-05-19T12:03:28+00:00"
     },
     "air-temperature-and-humidity": {
       "type": "SHT1x",
       "pinData": 15,
       "pinSck": 13,
       "readingInterval": 20,
-      "previousReading": "2015-05-19T12:03:07+00:00"
+      "previousReading": "2015-05-19T12:03:33+00:00"
     }
   }
 }

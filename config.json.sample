@@ -1,4 +1,12 @@
 {
+  "twitter": {
+    "consumerKey": "<consumer key>",
+    "consumerSecret": "<consumer secret>",
+    "accessTokenKey": "<access token key>",
+    "accessTokenSecret": "<access token secret>",
+    "previousAction": "2015-05-19T12:16:42+00:00",
+    "actionInterval": 3600
+  },
   "sensors": {
     "soil-temperature-and-humidity": {
       "type": "SHT1x",

@@ -28,6 +28,8 @@ An experimental research laboratory located on rooftop of the Exactum building i
 - Nodejs installed globally
 - Forever installed globally
 
+sudo apt-get install fswebcam
+
 Install app
 
 run npm install

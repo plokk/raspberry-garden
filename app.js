@@ -6,6 +6,9 @@ var moment     = require('moment');
 var firebase   = require('./js/firebase_service.js');
 var Controller = require('./js/controller.js');
 var Sensor     = require('./js/sensor.js');
+var Twitter    = require('twitter');
+
+var twitterClient;
 
 // Console log message titles
 var TITLE = {
@@ -13,8 +16,11 @@ var TITLE = {
 	ERROR: ' ! '.red 
 }
 
-// File name where configuration is stored
+// File where configuration is stored
 var configFile  = __dirname + '/config.json';
+
+// File where latest webcam snapshot is stored
+var webcamImage = __dirname + '/image.jpg';
 
 // Config object
 var config = {};
@@ -48,6 +54,8 @@ function writeConfig(callback) {
 
 // Queue for sensor reading tasks
 var readQueue = [];
+
+var lastData = {};
 
 /**
  * Read sensor values
@@ -85,6 +93,12 @@ function readSensors() {
 							values.humidity = 100;
 						}
 					} 
+
+					if (!sensorName in lastData) {
+						lastData[sensorName] = {};
+					}
+
+					lastData[sensorName] = values;
 
 					firebase.addItem(sensorName, values);
 					console.log(TITLE.INFO + Sensor.getSelected().name + ':');
@@ -132,6 +146,22 @@ function loop() {
 	}, 5000);
 }
 
+function doGrabWebcam() {
+	console.log(TITLE.INFO + 'Init Webcam');
+	var exec = require('child_process').exec;
+
+	exec('fswebcam ' + webcamImage + ' -d /dev/video0 -r 1024x768 --no-banner',
+		function(error, stdout, stderr) {
+			if (error) {
+				console.error(TITLE.ERROR + error);
+				return;
+			}
+			
+			console.log(TITLE.INFO + 'Snapshot captured');
+    		doMediaTweet();
+		}
+	);
+}
 
 function doPourWater() {
 	// Select sensor to be used
@@ -143,6 +173,66 @@ function doPourWater() {
 		function(error) {
 			if (error) {
 				console.error(TITLE.ERROR + error);
+				return;
+			}
+
+			var sensorName = 'water-solenoid-valve';
+			//Add timestamp to values
+			var values = {
+				timestamp: moment().format(),
+				duration: 5000
+			}
+
+			firebase.addItem(sensorName, values);
+			console.log(TITLE.INFO + 'Water poured for 5000ms');
+			
+		}
+	);
+}
+
+function doMediaTweet() {
+	var data = fs.readFileSync(webcamImage);
+
+	twitterClient.post('media/upload', 
+		{ media: data }, 
+		function(error, media, response) {
+
+			if (error) {
+				console.error(TITLE.ERROR + 'Error uploading media:');
+				console.error(error);
+				return;
+			}
+
+			console.log(media);
+
+			// Lets tweet it
+			var status = {
+				status: '🌱 Yeah, I am a media tweet.',
+				media_ids: media.media_id_string // Pass the media id string
+			}
+
+			twitterClient.post('statuses/update', status, 
+				function(error, tweet, response) {
+					if (error) {
+						console.error(TITLE.ERROR + 'Error in tweet:');
+						console.error(error);
+					}
+				}
+			);
+		
+		}
+	);
+}
+
+function doTweet() {
+	twitterClient.post('statuses/update', 
+		{ 
+			status: '🌱 Doing great! Air temperature is +23℃ and soil moisture is 96%' 
+		}, 
+		function(error, tweet, response) {
+			if (error) {
+				console.error(TITLE.ERROR + 'Error in tweet:');
+				console.error(error);
 			}
 		}
 	);
@@ -203,9 +293,23 @@ function initialize() {
 				process.exit(1);
 				return;
 			}
+
+			if ('twitter' in config) {
+				twitterClient = new Twitter({
+					consumer_key: config.twitter.consumerKey,
+					consumer_secret: config.twitter.consumerSecret,
+					access_token_key: config.twitter.accessTokenKey,
+					access_token_secret: config.twitter.accessTokenSecret
+				});
+			}
+
 			console.log(TITLE.INFO + 'Initialization complete. Running application..');
+
 			loop();
 			//doPourWater();
+			//doTweet();
+			//doMediaTweet();
+			//doGrabWebcam();
 		}
 	);
 }

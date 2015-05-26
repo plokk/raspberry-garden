@@ -10,13 +10,12 @@ var FirebaseService = {
     },
 
     getAllDeviceData: function(device, callback) {
-        this.data.child(device).on('value', function(values) {
+        this.data.child(device).limitToLast(5).on('value', function(values) {
             callback(values.val());
         }, function (errorObject) {
             return errorObject.code;
         });
     }
-
 };
 
 module.exports = FirebaseService;

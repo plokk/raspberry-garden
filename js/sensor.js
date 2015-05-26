@@ -228,36 +228,39 @@ var Sensor = {
 		var sequence = [];
 
 		for (var mask = 0x80; mask; mask >>= 1) {
-		sequence.push(
-		SCKHigh, Wait,
-		function(mask, callback) {
-		DataRead(function(mask, error, dataValue) {
-		if (error) {
-		callback(error);
-		return;
-		}
-		if (dataValue != 0) {
-		value |= mask;
-		}
-		callback();
-		}.bind(undefined, mask));
-		}.bind(undefined, mask),
-		SCKLow, Wait // Tell sensor to give us more data
-		);
+			sequence.push(
+				SCKHigh, Wait,
+				function(mask, callback) {
+					DataRead(function(mask, error, dataValue) {
+						if (error) {
+							callback(error);
+							return;
+						}
+						if (dataValue != 0) {
+							value |= mask;
+						}
+						callback();
+					}.bind(undefined, mask));
+				}.bind(undefined, mask),
+				SCKLow, Wait // Tell sensor to give us more data
+			);
 		}
 
 		if (sendACK) {
-		sequence.push(DataLow, Wait);
+			sequence.push(DataLow, Wait);
 		}
+		
 		sequence.push(
-		SCKHigh, Wait,
-		SCKLow, Wait
+			SCKHigh, Wait,
+			SCKLow, Wait
 		);
+
 		if (sendACK) {
-		sequence.push(DataHigh, Wait);
+			sequence.push(DataHigh, Wait);
 		}
+
 		async.series(sequence, function(error) {
-		callback(error, value);
+			callback(error, value);
 		});
 	},
 
@@ -266,10 +269,10 @@ var Sensor = {
 	 */
 	_startMeasurement: function(type, callback) {
 		async.series([
-		Sensor._transmissionStart,
-		function(callback) {
-		Sensor._sendByte(type, callback);
-		}
+			Sensor._transmissionStart,
+			function(callback) {
+				Sensor._sendByte(type, callback);
+			}
 		], callback);
 	},
 
@@ -283,69 +286,75 @@ var Sensor = {
 		var continueWaiting = true;
 		var delayCount = 62;
 		async.whilst(
-		function () { return continueWaiting; },
-		function(callback) {
-		DataRead(function(error, dataValue) {
-		if (error) {
-		callback(error);
-		return;
-		}
-		// DATA pin will get low once we have data
-		if (!dataValue) {
-		continueWaiting = false;
-		}
+			function () { 
+				return continueWaiting; 
+			},
+			function(callback) {
+				DataRead(function(error, dataValue) {
+			
+				if (error) {
+					callback(error);
+					return;
+				}
+			
+				// DATA pin will get low once we have data
+				if (!dataValue) {
+					continueWaiting = false;
+				}
 
-		delayCount = delayCount - 1;
-		if (delayCount === 0) {
-		continueWaiting = false;
-		callback("Timed out waiting for data");
-		}
+				delayCount = delayCount - 1;
+		
+				if (delayCount === 0) {
+					continueWaiting = false;
+					callback("Timed out waiting for data");
+				}
 
-		// Wait
-		sleep.usleep(5000);
-		callback();
-		});
-		},
-		function(error) {
-		if (error) {
-		callback(error);
-		return;
-		}
-		// A value is available for us
-		var composedValue = 0;
-		async.series([
-		function(callback) {
-		// Read High Byte
-		Sensor._readByte(true, function(error, dataValue) {
-		composedValue = dataValue << 8;
-		Sensor._mutateCRC(dataValue);
-		callback(error);
-		});
-		},
-		function(callback) {
-		// Read Low Byte
-		Sensor._readByte(true, function(error, dataValue) {
-		composedValue += dataValue;
-		Sensor._mutateCRC(dataValue);
-		callback(error);
-		});
-		},
-		function(callback) {
-		// Read checksum
-		Sensor._readByte(false, function(error, dataValue) {
-		if (error) {
-		callback(error);
-		} else if (CRCValue !== mirrorByte(dataValue)) {
-		callback('Checksum does not match');
-		} else {
-		callback();
-		}
-		});
-		}
-		], function(error) {
-		callback(error, composedValue);
-		});
-		}
+				// Wait
+				sleep.usleep(5000);
+					callback();
+				});
+			},
+			function(error) {
+				if (error) {
+					callback(error);
+					return;
+				}
+		
+				// A value is available for us
+				var composedValue = 0;
+				async.series([
+					function(callback) {
+						// Read High Byte
+						Sensor._readByte(true, function(error, dataValue) {
+							composedValue = dataValue << 8;
+							Sensor._mutateCRC(dataValue);
+							callback(error);
+						});
+					},
+					function(callback) {
+						// Read Low Byte
+						Sensor._readByte(true, function(error, dataValue) {
+							composedValue += dataValue;
+							Sensor._mutateCRC(dataValue);
+							callback(error);
+						});
+					},
+					function(callback) {
+						// Read checksum
+						Sensor._readByte(false, function(error, dataValue) {
+							if (error) {
+								callback(error);
+							} else if (CRCValue !== mirrorByte(dataValue)) {
+								callback('Checksum does not match');
+							} else {
+								callback();
+							}
+						});
+					}
+				], function(error) {
+					callback(error, composedValue);
+				});
+			}
 		);
 	},
 

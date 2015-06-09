@@ -12,6 +12,7 @@
     "colors": "^1.1.0",
     "faye-websocket": "^0.9.4",
     "firebase": "^2.2.4",
+    "keypress": "^0.2.1",
     "moment": "^2.10.2",
     "pi-gpio": "0.0.7",
     "rpi-gpio": "^0.5.1",

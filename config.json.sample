@@ -21,6 +21,11 @@
       "pinSck": 13,
       "readingInterval": 60,
       "previousReading": "2015-05-19T12:16:42+00:00"
+    },
+    "water-level-and-temperature": {
+      "type": "URM37",
+      "readingInterval": 60,
+      "previousReading": "2015-05-19T12:16:42+00:00"
     }
   },
   "controllers": {

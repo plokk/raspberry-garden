@@ -61,6 +61,14 @@ The backend is written using NodeJS and is run as a Forever service. The complet
 
 The casing for the device is designed using the lovely [Tinkercad](https://www.tinkercad.com/) and 3D printed using the [MakerBot Replicator 2](http://eu.makerbot.com/shop/en/). Casings were designed for the Raspberry Pi B+, sensor connector PCB, URM37 and solenoid valve. We noticed that the appearance of the complete setup with all the wires going from the main unit to the sensors through the connector unit is quite messy. The design could be improved by eighter using wireless sensors or designing both the main unit and the connector board in a single unit.
 
+## The designs are available in Tinkercad
+
+- [Main unit](https://www.tinkercad.com/things/2GS74ZQmHF4-raspberry-pi-b-birdhouse-casing-v2)
+- [Connector unit](https://www.tinkercad.com/things/icEUL7GnXWZ-connector-board-casing)
+- [URM37 casing](https://www.tinkercad.com/things/aJAX71eTCAZ-urm37-casing)
+- [Solenoid valve casing](https://www.tinkercad.com/things/aEtUbJVgOfi-solenoid-casing-adjusted)
+
+
 # Team
 ------
 
